@@ -13,19 +13,36 @@ typedef void * Addr;
 #define DEBUG(...)\
 if(SHOW_ERROR)\
 {\
-	printf("Error : %s, %d", __FUNCTION__, __LINE__);\
+	printf("\033[0;31m [Debug message]: ");\
+	printf("%s, %d ", __FUNCTION__, __LINE__);\
 	printf(__VA_ARGS__);\
+	printf("\n");\
+	printf("\033[0m");\
 }
 
 // The array of free lists. Stores the head of each free list.
 Addr* freeListArr;
 // Main memory block acquired from heap for further allocations.
 Addr mainMemoryBlock;
+// Size of the main memory block.
+unsigned int sizeOfMainMemoryBlock;
+// Size of the free list array.
+unsigned int sizeOfFreeListArr;
+// Size of the basic block.
+unsigned int sizeOfBasicBlock;
+
+#define _BLOCK_SIZE(i) (sizeOfBasicBlock * (1 << i))
 
 typedef struct _header
 {
 	Addr next;
 } Header;
+
+// typedef struct _block
+// {
+// 	Header header;
+// 	Addr data;
+// } Block;
 
 unsigned int init_allocator(unsigned int _basic_block_size, unsigned int _length); 
 /* This function initializes the memory allocator and makes a portion of 

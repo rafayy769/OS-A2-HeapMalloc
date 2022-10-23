@@ -2,3 +2,4 @@
 bin/
 obj/
 manual/
+src/test.c
