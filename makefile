@@ -37,7 +37,7 @@ valgrind: all
 	valgrind $(VALG_FLAGS) $(TARGET)
 
 clean:
-	$(RM) $(TARGET) $(ACKER_OBJ) $(ALLOC_OBJ)
+	$(RM) $(TARGET) $(ACKER_OBJ) $(ALLOC_OBJ) $(TEST_TARGET)
 
 test: ackermann.o my_allocator.o
 	gcc -o $(TEST_TARGET) $(TEST_SRC) $(ACKER_OBJ) $(ALLOC_OBJ)

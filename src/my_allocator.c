@@ -72,7 +72,7 @@ void printFreeList()
 	DEBUG("Free list:");
 	for (int i = 0; i < sizeOfFreeListArr; i++)
 	{
-		DEBUG("Index %d: %p",i, freeListArr[i]);
+		DEBUG("Index %d, size %d: %p",i, _BLOCK_SIZE(i), freeListArr[i]);
 	}
 }
 // find address of the buddy of the block whose address is given
@@ -145,9 +145,9 @@ Addr my_malloc(unsigned int _length)
 
 	// Basic block size
 	unsigned int basicBlockSize = sizeOfBasicBlock; // basic_block_size = (main_memory_size / 2^(size_of_free_list_array - 1))
-	
+
 	// Step 1. Look in the free list, if any free block is available of size >= _length + HEADER_SIZE.
-	int i = intLog2((requiredSize + basicBlockSize - 1) / basicBlockSize);
+	int i = intLog2((requiredSize + basicBlockSize - 1) / basicBlockSize);  // caclulates the index of the smallest block that can hold the required size
 	DEBUG("my_malloc will look for a block of order %d size %d in the free list", i, _BLOCK_SIZE(i));
 
 	// check if the required size is larger than the size of the main memory block
@@ -164,9 +164,9 @@ Addr my_malloc(unsigned int _length)
 		Addr head = freeListArr[i];
 
 		// Update the free list array with the next free block
-		// freeListArr[i] = *(Addr*)head;
-		freeListArr[i] = ((Header*)head)->next;
+		freeListArr[i] = ((Header*)block)->next;
 		printFreeList();
+
 		return block + HEADER_SIZE;	
 		// return block;
 	}
