@@ -116,11 +116,11 @@ Addr split_block(Addr _block, unsigned int i, unsigned int j)
 	{	
 		// find the buddy
 		Addr buddy = findBuddy(_block, i-1);
-		// add the buddy to the list
-		freeListArr[i-1] = buddy;
 		// add the header to the buddy, since the free list was empty, therefore the next pointer is NULL
 		Header* header = (Header*)buddy;
-		header->next = NULL;
+		header->next = freeListArr[i-1];
+		// add the buddy to the list
+		freeListArr[i-1] = buddy;
 		// recursively split the block
 		return split_block(_block, i-1, j);
 	}
@@ -167,6 +167,11 @@ Addr my_malloc(unsigned int _length)
 		freeListArr[i] = ((Header*)block)->next;
 		printFreeList();
 
+		// Update the header of the block with the size of the block, size will be long
+		((Header*)block)->next = (Addr)(long)_BLOCK_SIZE(i);
+		DEBUG("Block's address returned is %p", block);
+		DEBUG("Block's header is %p", ((Header*)block)->next);
+		DEBUG("Returned address is %p", block + HEADER_SIZE);
 		return block + HEADER_SIZE;	
 		// return block;
 	}
@@ -177,24 +182,29 @@ Addr my_malloc(unsigned int _length)
 		// get the block by splitting, and use its buddy as the head in the free_list_array
 		int j = i;
 		printFreeList();
-		while(freeListArr[j] == NULL)
+		while(j < sizeOfFreeListArr && freeListArr[j] == NULL)
 		{
 			j++;
 		}
+
+		if (j == sizeOfFreeListArr)
+		{
+			DEBUG("No free memory block is available.");
+			return NULL;
+		}
+		
 		DEBUG("i = %d, j = %d", i, j);
 		// i represents the Block size which will be used to split
 		// Split the block and update the free list array
 		// size of block for index i = 1 << (i + log2(basicBlockSize))
 		// block = split_block(freeListArr[j], (1 << (i + intLog2(basicBlockSize))));
 		block = split_block(freeListArr[j], j, i);
-		freeListArr[sizeOfFreeListArr-1] = NULL;
+		// freeListArr[sizeOfFreeListArr-1] = NULL;
+		freeListArr[j] = ((Header*)freeListArr[j])->next;
+		((Header*)block)->next = (Addr)(long)_BLOCK_SIZE(i);
 		printFreeList();
 		return block + HEADER_SIZE;
-		// return block;
 	}
-
-	// return freeBlock + HEADER_SIZE;
-	// return malloc((size_t)_length);
 }
 
 /**
