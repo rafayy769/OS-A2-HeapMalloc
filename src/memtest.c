@@ -13,15 +13,14 @@ int main(int argc, char **argv)
   extern char *optarg;
   extern int optind, opterr, optopt;
 
-  int basic_block_size = 128;
-  int memory_length = (512 * 1024);
+  int basic_block_size = 16;
+  int memory_length = (512*1024);
 
   while ((option = getopt(argc, argv, "b:s:")) != -1)
   {
 	switch (option)
 	{
 	case 'b':
-	  // @ts-ignore
 	  printf("basic block size: %s", optarg);
 	  basic_block_size = atoi(optarg);
 	  break;

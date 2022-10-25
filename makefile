@@ -44,3 +44,7 @@ test: ackermann.o my_allocator.o
 
 val_test: test
 	valgrind $(VALG_FLAGS) $(TEST_TARGET)
+
+test2: src/test2.c
+	gcc -o bin/test2 src/test2.c
+	bin/test2

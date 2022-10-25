@@ -72,8 +72,17 @@ void printFreeList()
 	DEBUG("Free list:");
 	for (int i = 0; i < sizeOfFreeListArr; i++)
 	{
-		DEBUG("Index %d, size %d: %p",i, _BLOCK_SIZE(i), freeListArr[i]);
+		DEBUG2("Index %d, size %d: %p",i, _BLOCK_SIZE(i), freeListArr[i]);
+		Addr curr = freeListArr[i];
+		while (curr != NULL)
+		{
+			Header* header = (Header*)curr;
+			DEBUG2("-> %p", header->next);
+			curr = header->next;
+		}
+		printf("\n");
 	}
+	printf("\n");
 }
 // find address of the buddy of the block whose address is given
 Addr findBuddy(Addr _block, int i)
@@ -126,6 +135,59 @@ Addr split_block(Addr _block, unsigned int i, unsigned int j)
 	}
 }
 
+short checkIfFree(long header)
+{
+	return ((header & 0xFFFFFFFF) != MAGIC_NUMBER);
+}
+
+Addr coalesce_blocks(Addr _block, int i)
+{
+	DEBUG("Coalescing block %p of size %d", _block, _BLOCK_SIZE(i));
+	// base case
+	if (_BLOCK_SIZE(i) == sizeOfMainMemoryBlock)
+	{
+		((Header*)_block)->next = NULL;
+		// add the block to the free list
+		freeListArr[i] = _block;
+		return _block;
+	}
+	else
+	{
+		// find the buddy of the block
+		Addr buddy = findBuddy(_block, i);
+
+		// check if the buddy is free
+		long buddyHeader = (long)((Header*)buddy)->next;
+
+		if (checkIfFree(buddyHeader))
+		{
+			DEBUG("Buddy is free");
+			// remove the buddy from the free list
+			freeListArr[i] = (Addr)buddyHeader;
+			// coalesce the blocks
+			if (_block < buddy)
+			{
+				// freeListArr[i+1] = _block;
+				return coalesce_blocks(_block, i+1);
+			}
+			else
+			{
+				// freeListArr[i+1] = buddy;
+				return coalesce_blocks(buddy, i+1);
+			}
+			
+			// return coalesce_blocks(_block, i+1);
+		}
+		else
+		{
+			// add the header to the block
+			((Header*)_block)->next = freeListArr[i];
+			// add the block to the free list
+			freeListArr[i] = _block;
+			return _block;
+		}
+	}
+}
 
 /**
  * @brief Allocates a block of memory of size _length. The allocated block is the smallest block that can hold _length bytes. Returns a pointer to the allocated block, or NULL if the request cannot be satisfied.
@@ -167,13 +229,13 @@ Addr my_malloc(unsigned int _length)
 		freeListArr[i] = ((Header*)block)->next;
 		printFreeList();
 
-		// Update the header of the block with the size of the block, size will be long
-		((Header*)block)->next = (Addr)(long)_BLOCK_SIZE(i);
-		DEBUG("Block's address returned is %p", block);
-		DEBUG("Block's header is %p", ((Header*)block)->next);
-		DEBUG("Returned address is %p", block + HEADER_SIZE);
+		// Update the header of the block with the size of the block and a magic number for integrity check, size will be long
+		long blockSize = _BLOCK_SIZE(i);
+		// left shift the blockSize by 32 bits to make space for the magic number
+		blockSize = blockSize << 32;
+
+		((Header*)block)->next = (Addr)(long)(blockSize | (long)MAGIC_NUMBER);
 		return block + HEADER_SIZE;	
-		// return block;
 	}
 	// When the required size is not available, find the next biggest block and keep splitting
 	else
@@ -201,7 +263,12 @@ Addr my_malloc(unsigned int _length)
 		block = split_block(freeListArr[j], j, i);
 		// freeListArr[sizeOfFreeListArr-1] = NULL;
 		freeListArr[j] = ((Header*)freeListArr[j])->next;
-		((Header*)block)->next = (Addr)(long)_BLOCK_SIZE(i);
+		// Update the header of the block with the size of the block and a magic number for integrity check, size will be long
+		long blockSize = _BLOCK_SIZE(i);
+		// left shift the blockSize by 32 bits to make space for the magic number
+		blockSize = blockSize << 32;
+
+		((Header*)block)->next = (Addr)(long)(blockSize | (long)MAGIC_NUMBER);
 		printFreeList();
 		return block + HEADER_SIZE;
 	}
@@ -215,7 +282,46 @@ Addr my_malloc(unsigned int _length)
  */
 int my_free(Addr _a)
 {
-	free(_a);
+	DEBUG("my_free called with address %p", _a);
+	// check if the address is valid
+	if (_a == NULL)
+	{
+		DEBUG("Invalid address");
+		return -1;
+	}
+
+	// extract the header from the address
+	long header = (long)((Header*)(_a - HEADER_SIZE))->next;
+
+	// check if the magic number is valid
+	if ((header & 0xFFFFFFFF) != MAGIC_NUMBER)
+	{
+		DEBUG("Invalid magic number");
+		return -1;
+	}
+
+	// extract the size of the block from the header
+	long blockSize = header >> 32;
+
+	if (blockSize > sizeOfMainMemoryBlock)
+	{
+		DEBUG("Invalid block size");
+		return -1;
+	}
+
+	// find the index of the block
+	int i = intLog2((int)blockSize / sizeOfBasicBlock);
+	DEBUG("my_free will free a block of order %d size %d", i, _BLOCK_SIZE(i));
+
+	// add the block to the free list
+	// ((Header*)(_a - HEADER_SIZE))->next = freeListArr[i];
+
+	// freeListArr[i] = _a - HEADER_SIZE;
+
+	// coalesce the block with its buddy
+	coalesce_blocks(_a - HEADER_SIZE, i);
+	printFreeList();
+	DEBUG("my_free successful");
 	return 0;
 }
 

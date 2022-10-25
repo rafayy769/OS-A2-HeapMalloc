@@ -5,9 +5,11 @@
 
 typedef void * Addr; 
 
-#define SHOW_ERROR 1
+#define SHOW_ERROR 0
 
 #define HEADER_SIZE 8
+
+#define MAGIC_NUMBER 0x69694200
 
 // Macro to print debug messages, in debug mode.
 #define DEBUG(...)\
@@ -17,6 +19,14 @@ if(SHOW_ERROR)\
 	printf("%s, %d ", __FUNCTION__, __LINE__);\
 	printf(__VA_ARGS__);\
 	printf("\n");\
+	printf("\033[0m");\
+}
+
+#define DEBUG2(...)\
+if(SHOW_ERROR)\
+{\
+	printf("\033[0;31m");\
+	printf(__VA_ARGS__);\
 	printf("\033[0m");\
 }
 
