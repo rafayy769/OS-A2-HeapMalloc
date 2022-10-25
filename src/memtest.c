@@ -13,7 +13,7 @@ int main(int argc, char **argv)
   extern char *optarg;
   extern int optind, opterr, optopt;
 
-  int basic_block_size = 16;
+  int basic_block_size = 128;
   int memory_length = (512*1024);
 
   while ((option = getopt(argc, argv, "b:s:")) != -1)

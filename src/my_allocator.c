@@ -67,24 +67,26 @@ unsigned int init_allocator(unsigned int _basic_block_size, unsigned int _length
 	}
 }
 
+/**
+ * @brief Utility function to print the free list array.
+ * 
+ */
 void printFreeList()
 {
 	DEBUG("Free list:");
 	for (int i = 0; i < sizeOfFreeListArr; i++)
 	{
-		DEBUG2("Index %d, size %d: %p",i, _BLOCK_SIZE(i), freeListArr[i]);
-		Addr curr = freeListArr[i];
-		while (curr != NULL)
-		{
-			Header* header = (Header*)curr;
-			DEBUG2("-> %p", header->next);
-			curr = header->next;
-		}
-		printf("\n");
+		DEBUG("Index %d, size %d: %p",i, _BLOCK_SIZE(i), freeListArr[i]);
 	}
-	printf("\n");
 }
-// find address of the buddy of the block whose address is given
+
+/**
+ * @brief Finds the address of the buddy of the block whose address is given.
+ * 
+ * @param _block Address of the block whose buddy is to be found.
+ * @param i Index of the free list array.
+ * @return Addr Address of the buddy.
+ */
 Addr findBuddy(Addr _block, int i)
 {
 	unsigned int sizeOfBlock = _BLOCK_SIZE(i);
@@ -135,11 +137,24 @@ Addr split_block(Addr _block, unsigned int i, unsigned int j)
 	}
 }
 
+/**
+ * @brief Checks if a given block whose header is given is free or not. Magic number is added only after allocations so if the header doesnt contain magic number, it should be a free block.
+ * 
+ * @param header Header of the block to check.
+ * @return short 1 if the block is free, 0 otherwise.
+ */
 short checkIfFree(long header)
 {
 	return ((header & 0xFFFFFFFF) != MAGIC_NUMBER);
 }
 
+/**
+ * @brief Merges the given block with its buddy if the buddy is free. If the buddy is not free, the block is added to the free list.
+ * 
+ * @param _block Address of the block to merge.
+ * @param i Size order of the block to merge.
+ * @return Addr Address of the merged block.
+ */
 Addr coalesce_blocks(Addr _block, int i)
 {
 	DEBUG("Coalescing block %p of size %d", _block, _BLOCK_SIZE(i));
@@ -167,16 +182,12 @@ Addr coalesce_blocks(Addr _block, int i)
 			// coalesce the blocks
 			if (_block < buddy)
 			{
-				// freeListArr[i+1] = _block;
 				return coalesce_blocks(_block, i+1);
 			}
 			else
 			{
-				// freeListArr[i+1] = buddy;
 				return coalesce_blocks(buddy, i+1);
 			}
-			
-			// return coalesce_blocks(_block, i+1);
 		}
 		else
 		{
