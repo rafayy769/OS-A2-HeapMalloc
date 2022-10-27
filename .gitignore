@@ -1,6 +1,3 @@
 .vscode/
-bin/
-obj/
 manual/
 src/test.c
-src/test2.c

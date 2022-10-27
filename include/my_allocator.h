@@ -22,14 +22,6 @@ if(SHOW_ERROR)\
 	printf("\033[0m");\
 }
 
-#define DEBUG2(...)\
-if(SHOW_ERROR)\
-{\
-	printf("\033[0;31m");\
-	printf(__VA_ARGS__);\
-	printf("\033[0m");\
-}
-
 // The array of free lists. Stores the head of each free list.
 Addr* freeListArr;
 // Main memory block acquired from heap for further allocations.
@@ -47,12 +39,6 @@ typedef struct _header
 {
 	Addr next;
 } Header;
-
-// typedef struct _block
-// {
-// 	Header header;
-// 	Addr data;
-// } Block;
 
 unsigned int init_allocator(unsigned int _basic_block_size, unsigned int _length); 
 /* This function initializes the memory allocator and makes a portion of 

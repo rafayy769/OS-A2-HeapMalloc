@@ -1,10 +1,11 @@
 # makefile for the "make" utility
 
 CC = gcc
-CFLAGS = -g -Wall
+CFLAGS = -O3
 RM = rm -f
 TARGET = bin/memtest
 TEST_TARGET = bin/test
+STD_TEST_TARGET = bin/standard_malloc
 VALG_FLAGS = --leak-check=full --show-leak-kinds=all --track-origins=yes
 
 ALLOC_SRC = src/my_allocator.c
@@ -21,30 +22,32 @@ TEST_SRC = src/test.c
 all: memtest
 
 ackermann.o: $(ACKER_SRC) $(ACKER_INC)
-	gcc -c -g $(ACKER_SRC) -o $(ACKER_OBJ)
+	$(CC) -c $(ACKER_SRC) -o $(ACKER_OBJ) $(CFLAGS)
 
 my_allocator.o : $(ALLOC_SRC) $(ALLOC_INC)
-	gcc -g -c $(ALLOC_SRC) -o $(ALLOC_OBJ)
+	$(CC) -c $(ALLOC_SRC) -o $(ALLOC_OBJ) $(CFLAGS)
 
 memtest: ackermann.o my_allocator.o
-	gcc -o $(TARGET) $(MEM_SRC) $(ACKER_OBJ) $(ALLOC_OBJ)
+	$(CC) -o $(TARGET) $(MEM_SRC) $(ACKER_OBJ) $(ALLOC_OBJ)
 
-out: all
-	clear
+out:
 	$(TARGET)
+
+run:
+	$(TARGET) -b $(B) -s $(S)
 
 valgrind: all
 	valgrind $(VALG_FLAGS) $(TARGET)
 
 clean:
-	$(RM) $(TARGET) $(ACKER_OBJ) $(ALLOC_OBJ) $(TEST_TARGET)
+	$(RM) $(TARGET) $(ACKER_OBJ) $(ALLOC_OBJ) $(TEST_TARGET) $(STD_TEST_TARGET)
 
 test: ackermann.o my_allocator.o
-	gcc -o $(TEST_TARGET) $(TEST_SRC) $(ACKER_OBJ) $(ALLOC_OBJ)
+	$(CC) -o $(TEST_TARGET) $(TEST_SRC) $(ACKER_OBJ) $(ALLOC_OBJ)
 
 val_test: test
-	valgrind $(VALG_FLAGS) $(TEST_TARGET)
+	valgrind $(VALG_FLAGS) $(TARGET)
 
-test2: src/test2.c
-	gcc -o bin/test2 src/test2.c
-	bin/test2
+standard_malloc: src/standard_malloc.c
+	$(CC) -o $(STD_TEST_TARGET) src/standard_malloc.c $(CFLAGS)
+	$(STD_TEST_TARGET)

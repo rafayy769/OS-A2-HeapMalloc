@@ -13,19 +13,19 @@ int main(int argc, char **argv)
   extern char *optarg;
   extern int optind, opterr, optopt;
 
-  int basic_block_size = 128;
-  int memory_length = (512*1024);
+  int basic_block_size = 16;
+  int memory_length = (32*1024*1024);
 
   while ((option = getopt(argc, argv, "b:s:")) != -1)
   {
 	switch (option)
 	{
 	case 'b':
-	  printf("basic block size: %s", optarg);
+	  printf("basic block size: %s\n", optarg);
 	  basic_block_size = atoi(optarg);
 	  break;
 	case 's':
-	  printf("memory length: %s", optarg);
+	  printf("memory length: %s\n", optarg);
 	  memory_length = atoi(optarg);
 	  break;
 	default:

@@ -22,12 +22,15 @@ unsigned int intLog2(unsigned int x)
 /**
  * @brief Initializes the allocator. Allocates a big block of memory, to be used for allocations by malloc. Initializes the free list array as well. This function must be called before any other allocator function.
  * 
- * @param _basic_block_size Smallest possible block size.
- * @param _length Length of the memory to make available to the program.
+ * @param _basic_block_size Smallest possible block size. Should be a power of 2.
+ * @param _length Length of the memory to make available to the program. Assuming memory is available in the heap and that _length is a power of 2.
  * @return unsigned int Amount of memory made available. Zero if an error is encountered.
  */
 unsigned int init_allocator(unsigned int _basic_block_size, unsigned int _length)
 {
+	// Ceils the length to the nearest power of 2.
+	_length = 1 << intLog2(_length);
+
 	int sizeOfArr = intLog2(_length / _basic_block_size) + 1;
 	
 	freeListArr     = (Addr)malloc(sizeOfArr * sizeof(Addr));
@@ -269,8 +272,7 @@ Addr my_malloc(unsigned int _length)
 		DEBUG("i = %d, j = %d", i, j);
 		// i represents the Block size which will be used to split
 		// Split the block and update the free list array
-		// size of block for index i = 1 << (i + log2(basicBlockSize))
-		// block = split_block(freeListArr[j], (1 << (i + intLog2(basicBlockSize))));
+		
 		block = split_block(freeListArr[j], j, i);
 		// freeListArr[sizeOfFreeListArr-1] = NULL;
 		freeListArr[j] = ((Header*)freeListArr[j])->next;
@@ -324,12 +326,6 @@ int my_free(Addr _a)
 	int i = intLog2((int)blockSize / sizeOfBasicBlock);
 	DEBUG("my_free will free a block of order %d size %d", i, _BLOCK_SIZE(i));
 
-	// add the block to the free list
-	// ((Header*)(_a - HEADER_SIZE))->next = freeListArr[i];
-
-	// freeListArr[i] = _a - HEADER_SIZE;
-
-	// coalesce the block with its buddy
 	coalesce_blocks(_a - HEADER_SIZE, i);
 	printFreeList();
 	DEBUG("my_free successful");
